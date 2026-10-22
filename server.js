@@ -42,7 +42,12 @@ function dbErrorMessage(err) {
   if (/<db_password>/.test(msg)) return msg;
   if (/auth/i.test(msg)) return 'Database login failed: check the username and password in MONGODB_URI.';
   if (/127.0.0.1|localhost/.test(MONGODB_URI)) return 'MONGODB_URI is not set on the server. Add it to the environment variables and redeploy.';
-  return 'Could not reach the database. In MongoDB Atlas, allow access from 0.0.0.0/0 under Network Access.';
+  if (/unescaped|Invalid scheme|connection string|URI|parse/i.test(msg)) {
+    return 'MONGODB_URI is not written correctly. Paste it without quotes or spaces, and write @ inside the password as %40.';
+  }
+  if (/ENOTFOUND|querySrv/i.test(msg)) return 'The cluster address in MONGODB_URI is wrong. Copy it again from Atlas → Connect.';
+  // Show the driver's own reason, with any credentials removed.
+  return 'Could not reach the database: ' + msg.replace(/\/\/[^@/]*@/g, '//***@');
 }
 
 app.get('/api/config', wrap(async (req, res) => {
