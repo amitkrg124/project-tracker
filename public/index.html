@@ -3,98 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#4f46e5">
+  <meta name="theme-color" content="#f3f4f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#12161d" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Daily tasks and projects for the team">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tracker">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Team Tracker</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap">
+  <link rel="stylesheet" href="app.css">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    const savedTheme = localStorage.getItem('tt-theme');
+    if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  </script>
 </head>
-<body>
+<body class="min-h-dvh bg-base-200 font-sans text-base-content antialiased">
+  <div id="boot" class="grid min-h-dvh place-items-center">
+    <span class="loading loading-dots loading-lg text-primary" aria-label="Loading"></span>
+  </div>
+
   <!-- Sign-in: pick who you are (and enter the team passcode if one is set) -->
-  <section id="login" class="login" hidden>
-    <div class="login-card">
-      <div class="logo">✅</div>
-      <h1>Team Tracker</h1>
-      <p class="muted">Who's using this phone?</p>
-      <div id="member-buttons" class="member-buttons"></div>
-      <input id="passcode" type="password" inputmode="numeric" placeholder="Team passcode" hidden>
-      <p id="login-error" class="error" hidden></p>
+  <section id="login" class="grid min-h-dvh place-items-center p-6" hidden>
+    <div class="w-full max-w-sm">
+      <div class="mb-8 grid size-14 place-items-center rounded-2xl bg-primary text-primary-content">
+        <i data-icon="list-checks" class="size-7"></i>
+      </div>
+      <h1 class="font-display text-4xl font-bold tracking-tight">Team Tracker</h1>
+      <p class="mt-2 text-lg text-base-content/70">Who's using this phone?</p>
+      <label id="passcode-wrap" class="input input-lg mt-8 w-full" hidden>
+        <span class="sr-only">Team passcode</span>
+        <input id="passcode" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Team passcode">
+      </label>
+      <div id="member-buttons" class="mt-4 grid gap-3"></div>
+      <div id="login-error" role="alert" class="alert alert-error alert-soft mt-4" hidden></div>
     </div>
   </section>
 
   <div id="app" hidden>
-    <header class="topbar">
-      <button id="back-btn" class="icon-btn" aria-label="Back" hidden>‹</button>
-      <h1 id="view-title">Today</h1>
-      <span id="sync" class="sync" title="Sync status">●</span>
-      <button id="me-btn" class="avatar" aria-label="Switch user"></button>
+    <header class="sticky top-0 z-20 bg-base-200/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <div class="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4">
+        <button id="back-btn" class="btn btn-circle btn-ghost -ml-2" aria-label="Back to projects" hidden><i data-icon="chevron-left" class="size-6"></i></button>
+        <h1 id="view-title" class="flex-1 truncate font-display text-xl font-semibold"></h1>
+        <button id="go-today" class="btn btn-ghost btn-sm text-primary" hidden>Go to today</button>
+        <span id="sync" class="status status-success" role="status" title="Synced"></span>
+        <button id="me-btn" class="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" aria-label="Settings">
+          <span id="me-avatar" class="grid size-9 place-items-center rounded-full text-sm font-bold"></span>
+        </button>
+      </div>
     </header>
 
-    <main>
+    <main class="mx-auto max-w-2xl px-4 pb-44">
       <!-- TODAY -->
-      <section id="view-today" class="view">
-        <div class="datebar">
-          <button class="icon-btn" data-day="-1" aria-label="Previous day">‹</button>
-          <button id="date-label" class="date-label"></button>
-          <button class="icon-btn" data-day="1" aria-label="Next day">›</button>
+      <section id="view-today">
+        <button id="date-label" class="mt-1 block text-left" aria-label="Pick a date">
+          <span id="date-weekday" class="block text-sm font-medium text-base-content/60"></span>
+          <span class="flex items-baseline gap-2 font-display">
+            <span id="date-day" class="tabular text-6xl leading-none font-bold tracking-tight"></span>
+            <span id="date-month" class="text-2xl font-semibold"></span>
+          </span>
+        </button>
+
+        <div class="mt-5 flex items-center gap-1">
+          <button class="btn btn-square btn-ghost btn-sm" data-day="-7" aria-label="Previous week"><i data-icon="chevron-left" class="size-5"></i></button>
+          <div id="week" class="grid flex-1 grid-cols-7 gap-1"></div>
+          <button class="btn btn-square btn-ghost btn-sm" data-day="7" aria-label="Next week"><i data-icon="chevron-right" class="size-5"></i></button>
         </div>
 
-        <div class="summary card">
-          <div class="summary-row"><strong id="summary-text"></strong><span id="summary-pct" class="muted"></span></div>
-          <div class="bar"><span id="summary-bar"></span></div>
+        <div id="push-banner"></div>
+
+        <div class="mt-5 flex items-center gap-3">
+          <progress id="summary-bar" class="progress progress-success h-2 flex-1" value="0" max="100"></progress>
+          <span id="summary-text" class="tabular text-sm font-medium text-base-content/70"></span>
         </div>
 
-        <div class="chips" id="who-filter"></div>
-        <div class="chips">
-          <button class="chip" data-sort="time">⏰ By time</button>
-          <button class="chip" data-sort="priority">🔥 By priority</button>
+        <div class="mt-4 flex items-center gap-2">
+          <div id="who-filter" class="join flex-1"></div>
+          <button id="sort-btn" class="btn btn-ghost btn-sm"></button>
         </div>
 
         <div id="task-list"></div>
       </section>
 
       <!-- PROJECTS -->
-      <section id="view-projects" class="view" hidden>
-        <div class="chips">
-          <button class="chip" data-pfilter="open">Open</button>
-          <button class="chip" data-pfilter="all">All</button>
-          <button class="chip" data-pfilter="done">✅ Done</button>
+      <section id="view-projects" hidden>
+        <div id="project-filter" class="join mt-1">
+          <input class="join-item btn btn-sm [&:not(:checked)]:bg-base-100" type="radio" name="pfilter" value="open" aria-label="Open" checked>
+          <input class="join-item btn btn-sm [&:not(:checked)]:bg-base-100" type="radio" name="pfilter" value="all" aria-label="All">
+          <input class="join-item btn btn-sm [&:not(:checked)]:bg-base-100" type="radio" name="pfilter" value="done" aria-label="Done">
         </div>
-        <div id="project-list"></div>
+        <div id="project-list" class="mt-4 grid gap-3"></div>
       </section>
 
       <!-- PROJECT DETAIL -->
-      <section id="view-project" class="view" hidden>
+      <section id="view-project" hidden>
         <div id="project-detail"></div>
+      </section>
+
+      <!-- INBOX -->
+      <section id="view-inbox" hidden>
+        <div id="inbox"></div>
       </section>
     </main>
 
-    <button id="fab" class="fab" aria-label="Add">+</button>
+    <button id="fab" class="btn btn-circle btn-primary btn-lg fixed right-5 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 shadow-lg shadow-primary/30" aria-label="Add">
+      <i data-icon="plus" class="size-7"></i>
+    </button>
 
-    <nav class="tabbar">
-      <button data-tab="today" class="active"><span>☀️</span>Today</button>
-      <button data-tab="projects"><span>📁</span>Projects</button>
+    <nav class="dock z-30" aria-label="Main">
+      <button data-tab="today"><i data-icon="calendar-check" class="size-6"></i><span class="dock-label">Today</span></button>
+      <button data-tab="projects"><i data-icon="folder-kanban" class="size-6"></i><span class="dock-label">Projects</span></button>
+      <button data-tab="inbox" class="indicator">
+        <span id="bell-count" class="indicator-item badge badge-error badge-xs tabular mt-1 mr-6" hidden></span>
+        <i data-icon="bell" class="size-6"></i><span class="dock-label">Inbox</span>
+      </button>
     </nav>
   </div>
 
   <!-- Bottom sheet used for every add/edit form -->
-  <dialog id="sheet" class="sheet">
-    <form id="sheet-form" method="dialog">
-      <div class="sheet-handle"></div>
-      <h2 id="sheet-title"></h2>
-      <div id="sheet-body"></div>
-      <div class="sheet-actions">
-        <button type="button" id="sheet-delete" class="btn danger" hidden>Delete</button>
-        <button type="button" id="sheet-cancel" class="btn ghost">Cancel</button>
-        <button type="submit" class="btn primary">Save</button>
-      </div>
-    </form>
+  <dialog id="sheet" class="modal modal-bottom sm:modal-middle">
+    <div class="modal-box max-h-[90dvh] pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+      <form id="sheet-form">
+        <h2 id="sheet-title" class="mb-4 font-display text-xl font-semibold"></h2>
+        <div id="sheet-body" class="grid gap-4"></div>
+        <div class="modal-action sticky -bottom-6 -mx-6 -mb-6 border-t border-base-300 bg-base-100 px-6 py-3">
+          <button type="button" id="sheet-delete" class="btn btn-ghost mr-auto text-error" hidden>Delete</button>
+          <button type="button" id="sheet-cancel" class="btn btn-ghost">Cancel</button>
+          <button type="submit" id="sheet-save" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>Close</button></form>
   </dialog>
 
-  <div id="toast" class="toast" hidden></div>
+  <div id="toast" class="toast toast-top toast-center z-50 mt-[env(safe-area-inset-top)]" aria-live="polite"></div>
 
+  <script src="icons.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

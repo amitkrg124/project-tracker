@@ -1,0 +1,112 @@
+/* Source for public/app.css. Build with: npm run build:css (or npm run dev:css while editing). */
+@import "tailwindcss";
+@source "../public";
+
+@plugin "daisyui" {
+  themes: false;
+  logs: false;
+}
+
+/* Light theme: cool paper and ink, ultramarine for actions.
+   Accent (saffron) and secondary (teal) are the two members' colours. */
+@plugin "daisyui/theme" {
+  name: "ledger";
+  default: true;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f3f4f7;
+  --color-base-300: #e3e6ed;
+  --color-base-content: #18202b;
+  --color-primary: #2b44d6;
+  --color-primary-content: #ffffff;
+  --color-secondary: #0e8f7e;
+  --color-secondary-content: #ffffff;
+  --color-accent: #d96b0b;
+  --color-accent-content: #ffffff;
+  --color-neutral: #18202b;
+  --color-neutral-content: #f3f4f7;
+  --color-info: #2f7ae5;
+  --color-info-content: #ffffff;
+  --color-success: #1f9d63;
+  --color-success-content: #ffffff;
+  --color-warning: #e39a12;
+  --color-warning-content: #231600;
+  --color-error: #d93c3c;
+  --color-error-content: #ffffff;
+  --radius-selector: 2rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: "ledger-dark";
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: #1a2029;
+  --color-base-200: #12161d;
+  --color-base-300: #2a3240;
+  --color-base-content: #e6e9ef;
+  --color-primary: #8193ff;
+  --color-primary-content: #0b1130;
+  --color-secondary: #2bb8a3;
+  --color-secondary-content: #04211c;
+  --color-accent: #f0913f;
+  --color-accent-content: #2a1300;
+  --color-neutral: #e6e9ef;
+  --color-neutral-content: #12161d;
+  --color-info: #5a9bf0;
+  --color-info-content: #06172e;
+  --color-success: #3cc183;
+  --color-success-content: #03220f;
+  --color-warning: #f2b443;
+  --color-warning-content: #231600;
+  --color-error: #f06a6a;
+  --color-error-content: #2b0606;
+  --radius-selector: 2rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+@layer components {
+  /* Round tick button for tasks and works. A red ring marks high priority. */
+  .tick {
+    @apply grid size-8 shrink-0 place-items-center rounded-full border-2 border-base-content/25 text-transparent transition-colors;
+  }
+  .tick.high { @apply border-error; }
+  .tick.on { @apply border-success bg-success text-success-content; }
+  .tick:focus-visible { @apply outline-2 outline-offset-2 outline-primary; }
+
+  /* Day in the week strip. */
+  .day {
+    @apply flex flex-col items-center gap-0.5 rounded-xl py-2 text-base-content/70 transition-colors;
+  }
+  .day.is-today { @apply text-primary font-bold; }
+  .day.is-selected { @apply bg-primary text-primary-content; }
+
+  .unread-dot { @apply size-2 shrink-0 rounded-full bg-primary; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { transition: none !important; animation: none !important; }
+}
