@@ -47,7 +47,16 @@ Open **http://localhost:3000**.
 
 ## 3. Put it online so you can use it from anywhere (free)
 
-Example using **Render** (https://render.com):
+### Option A: Vercel (https://vercel.com)
+1. Sign in to Vercel with GitHub → **Add New → Project** → import this repository.
+2. Leave **Framework Preset** on **Other**, and leave the build settings empty.
+3. Under **Environment Variables**, add `MONGODB_URI`, `MEMBERS`, and `APP_PASSCODE`.
+4. Click **Deploy**, then open the `.vercel.app` URL on both phones.
+5. In MongoDB Atlas → **Network Access**, allow `0.0.0.0/0`. Vercel's IP addresses change all the time, so this is required.
+
+Every time you push to GitHub, Vercel redeploys automatically.
+
+### Option B: Render (https://render.com)
 1. Push this folder to a GitHub repository. `.env` is git-ignored, so your secrets are not uploaded.
 2. On Render, create a **New → Web Service** from that repository.
 3. Build command: `npm install`. Start command: `npm start`.

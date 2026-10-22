@@ -13,6 +13,21 @@ const app = express();
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Connect once and reuse the connection. On Vercel each serverless instance keeps it between requests.
+let dbPromise = null;
+function connectDb() {
+  if (MONGODB_URI.includes('<db_password>')) {
+    return Promise.reject(new Error('Replace <db_password> in MONGODB_URI with your real MongoDB password.'));
+  }
+  dbPromise ||= mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 }).catch(err => {
+    dbPromise = null; // let the next request try again
+    throw err;
+  });
+  return dbPromise;
+}
+
+app.use('/api', (req, res, next) => connectDb().then(() => next(), next));
+
 // Copy only allowed fields from the request body.
 function pick(body, fields) {
   const out = {};
@@ -132,14 +147,14 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: status === 400 ? err.message : 'Server error' });
 });
 
-if (MONGODB_URI.includes('<db_password>')) {
-  console.error('Open the .env file and replace <db_password> in MONGODB_URI with your real MongoDB password.');
-  process.exit(1);
+// Run as a normal server locally (npm start). On Vercel the exported app is used instead.
+if (require.main === module) {
+  connectDb()
+    .then(() => app.listen(PORT, () => console.log(`Team Tracker running at http://localhost:${PORT}`)))
+    .catch(err => {
+      console.error('Could not connect to MongoDB:', err.message);
+      process.exit(1);
+    });
 }
 
-mongoose.connect(MONGODB_URI)
-  .then(() => app.listen(PORT, () => console.log(`Team Tracker running at http://localhost:${PORT}`)))
-  .catch(err => {
-    console.error('Could not connect to MongoDB:', err.message);
-    process.exit(1);
-  });
+module.exports = app;
