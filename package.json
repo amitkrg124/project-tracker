@@ -1,0 +1,19 @@
+{
+  "name": "team-tracker",
+  "version": "1.0.0",
+  "description": "Simple mobile-first project and daily task tracker for a 2-person team",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.3"
+  }
+}
