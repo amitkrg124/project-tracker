@@ -639,7 +639,18 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------- Boot ----------
 (async () => {
-  state.config = await fetch('/api/config').then(r => r.json());
+  try {
+    state.config = await fetch('/api/config').then(r => r.json());
+  } catch {
+    state.config = null;
+  }
+  if (!state.config || state.config.dbError) {
+    $('#login').hidden = false;
+    const err = $('#login-error');
+    err.textContent = '⚠️ ' + (state.config ? state.config.dbError : 'Cannot reach the server. Check your internet connection.');
+    err.hidden = false;
+    return;
+  }
   if (state.me && state.config.members.includes(state.me)) startApp();
   else showLogin();
 })();

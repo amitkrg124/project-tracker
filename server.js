@@ -26,8 +26,6 @@ function connectDb() {
   return dbPromise;
 }
 
-app.use('/api', (req, res, next) => connectDb().then(() => next(), next));
-
 // Copy only allowed fields from the request body.
 function pick(body, fields) {
   const out = {};
@@ -38,14 +36,27 @@ function pick(body, fields) {
 // Wrap async route handlers so errors reach the error middleware.
 const wrap = fn => (req, res, next) => fn(req, res, next).catch(next);
 
-app.get('/api/config', (req, res) => {
-  res.json({ members: MEMBERS, needsPasscode: Boolean(PASSCODE), PRIORITIES, TASK_STATUSES, PROJECT_STATUSES, WORK_STATUSES, UPDATE_TYPES });
-});
+// Explain database problems in plain words so they show up on the sign-in screen.
+function dbErrorMessage(err) {
+  const msg = err.message || '';
+  if (/<db_password>/.test(msg)) return msg;
+  if (/auth/i.test(msg)) return 'Database login failed: check the username and password in MONGODB_URI.';
+  if (/127.0.0.1|localhost/.test(MONGODB_URI)) return 'MONGODB_URI is not set on the server. Add it to the environment variables and redeploy.';
+  return 'Could not reach the database. In MongoDB Atlas, allow access from 0.0.0.0/0 under Network Access.';
+}
+
+app.get('/api/config', wrap(async (req, res) => {
+  const dbError = await connectDb().then(() => '', err => { console.error('MongoDB:', err.message); return dbErrorMessage(err); });
+  res.json({ dbError, members: MEMBERS, needsPasscode: Boolean(PASSCODE), PRIORITIES, TASK_STATUSES, PROJECT_STATUSES, WORK_STATUSES, UPDATE_TYPES });
+}));
 
 app.post('/api/login', (req, res) => {
   if (!PASSCODE || req.body.passcode === PASSCODE) return res.json({ ok: true });
   res.status(401).json({ error: 'Wrong passcode' });
 });
+
+// Everything below needs the database.
+app.use('/api', (req, res, next) => connectDb().then(() => next(), err => res.status(503).json({ error: dbErrorMessage(err) })));
 
 // Everything below requires the shared team passcode (when one is set).
 app.use('/api', (req, res, next) => {
